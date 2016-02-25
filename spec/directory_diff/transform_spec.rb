@@ -19,11 +19,11 @@ describe DirectoryDiff::Transform do
 
       it 'returns :insert ops for each row' do
         expect(transform.into([
-          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143'],
-          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232']
+          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
         ])).to eq([
-          [:insert, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143'],
-          [:insert, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232']
+          [:insert, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+          [:insert, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
         ])
       end
     end
@@ -31,15 +31,15 @@ describe DirectoryDiff::Transform do
     context 'the new version is an empty directory' do
       let(:current_directory) do
         [
-          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143'],
-          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232']
+          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
         ]
       end
 
       it 'returns :delete ops' do
         expect(transform.into([])).to eq([
-          [:delete, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143'],
-          [:delete, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232']
+          [:delete, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+          [:delete, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
         ])
       end
     end
@@ -55,18 +55,18 @@ describe DirectoryDiff::Transform do
     context 'the current version is exactly the same as the new directory' do
       let(:current_directory) do
         [
-          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143'],
-          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232']
+          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
         ]
       end
 
       it 'returns :noops ops' do # reordered to show order doesn't matter
         expect(transform.into([
-          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232'],
-          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143']
+          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil],
+          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil]
         ])).to eq([
-          [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143'],
-          [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232']
+          [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+          [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
         ])
       end
     end
@@ -74,55 +74,111 @@ describe DirectoryDiff::Transform do
     context 'the new version has updates to the records' do
       let(:current_directory) do
         [
-          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143'],
-          ['Adolfo Builes', 'adolfo@envoy.com', '415-232-4232'],
-          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232']
+          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+          ['Adolfo Builes', 'adolfo@envoy.com', '415-232-4232', nil],
+          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
         ]
       end
 
       it 'returns :update op for an update in name' do
-        new_directory = current_directory.clone
-        new_directory[1][0] = 'Adolfito Builes'
+        new_directory = [
+          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+          ['Adolfito Builes', 'adolfo@envoy.com', '415-232-4232', nil],
+          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
+        ]
 
         expect(transform.into(new_directory)).to eq([
-          [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143'],
-          [:update, 'Adolfito Builes', 'adolfo@envoy.com', '415-232-4232'],
-          [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232']
+          [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+          [:update, 'Adolfito Builes', 'adolfo@envoy.com', '415-232-4232', nil],
+          [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
         ])
       end
 
       it 'returns :update op for an update in phone number' do
-        new_directory = current_directory.clone
-        new_directory[0][2] = '555-555-5555'
+        new_directory = [
+          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+          ['Adolfo Builes', 'adolfo@envoy.com', '415-232-4232', nil],
+          ['Matthew Johnston', 'matthew@envoy.com', '555-555-5555', nil]
+        ]
 
         expect(transform.into(new_directory)).to eq([
-          [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143'],
-          [:noop, 'Adolfo Builes', 'adolfo@envoy.com', '415-232-4232'],
-          [:update, 'Matthew Johnston', 'matthew@envoy.com', '555-555-5555']
+          [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+          [:noop, 'Adolfo Builes', 'adolfo@envoy.com', '415-232-4232', nil],
+          [:update, 'Matthew Johnston', 'matthew@envoy.com', '555-555-5555', nil]
         ])
       end
 
       it 'returns a single :update op for an update in both name and phone number' do
-        new_directory = current_directory.clone
-        new_directory[2][0] = 'Kamalcito Mahyuddin'
-        new_directory[2][2] = '555-555-5555'
+        new_directory = [
+          ['Kamalcito Mahyuddin', 'kamal@envoy.com', '555-555-5555', nil],
+          ['Adolfo Builes', 'adolfo@envoy.com', '415-232-4232', nil],
+          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
+        ]
 
         expect(transform.into(new_directory)).to eq([
-          [:update, 'Kamalcito Mahyuddin', 'kamal@envoy.com', '555-555-5555'],
-          [:noop, 'Adolfo Builes', 'adolfo@envoy.com', '415-232-4232'],
-          [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232']
+          [:update, 'Kamalcito Mahyuddin', 'kamal@envoy.com', '555-555-5555', nil],
+          [:noop, 'Adolfo Builes', 'adolfo@envoy.com', '415-232-4232', nil],
+          [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
         ])
       end
     end
 
     context 'there are duplicate emails in new' do
       context 'which dont exist in current' do
-        it 'returns a single insert for the last one'
+        let(:current_directory) { [] }
+
+        it 'returns a single insert for the last one' do
+          new_directory = [
+            ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+            ['Adolfo Builes', 'adolfo@envoy.com', '415-232-4232', nil],
+            ['Adolfo Dupe', 'adolfo@envoy.com', '415-441-3232', nil]
+          ]
+
+          expect(transform.into(new_directory)).to eq([
+            [:insert, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+            [:insert, 'Adolfo Dupe', 'adolfo@envoy.com', '415-441-3232', nil]
+          ])
+        end
       end
 
       context 'which exists in current' do
-        it 'returns noop if last one is unchanged'
-        it 'returns update if last one has updates'
+        let(:current_directory) do
+          [
+            ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+            ['Adolfo Builes', 'adolfo@envoy.com', '415-232-4232', nil],
+            ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
+          ]
+        end
+
+        it 'returns noop if last one is unchanged' do
+          new_directory = [
+            ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+            ['Adolfo Updated', 'adolfo@envoy.com', '415-232-4232', nil],
+            ['Adolfo Builes', 'adolfo@envoy.com', '415-232-4232', nil],
+            ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
+          ]
+
+          expect(transform.into(new_directory)).to eq([
+            [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+            [:noop, 'Adolfo Builes', 'adolfo@envoy.com', '415-232-4232', nil],
+            [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
+          ])
+        end
+
+        it 'returns update if last one has updates' do
+          new_directory = [
+            ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+            ['Adolfo Builes', 'adolfo@envoy.com', '415-232-4232', nil],
+            ['Adolfo Updated', 'adolfo@envoy.com', '415-232-4232', nil],
+            ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
+          ]
+
+          expect(transform.into(new_directory)).to eq([
+            [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+            [:update, 'Adolfo Updated', 'adolfo@envoy.com', '415-232-4232', nil],
+            [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
+          ])
+        end
       end
     end
 
