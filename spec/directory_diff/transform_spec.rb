@@ -115,9 +115,28 @@ describe DirectoryDiff::Transform do
       end
     end
 
+    context 'there are duplicate emails in new' do
+      context 'which dont exist in current' do
+        it 'returns a single insert for the last one'
+      end
+
+      context 'which exists in current' do
+        it 'returns noop if last one is unchanged'
+        it 'returns update if last one has updates'
+      end
+    end
+
     context 'assistant support' do
-      context 'assistant email does not exist in the new directory'
-      context 'assistant email does not exist in current directory'
+      context 'assistant email does not exist in the new directory' do
+        context 'and there are duplicate assistant records' do
+          it 'picks the last assistant'
+        end
+      end
+      context 'assistant email does not exist in current directory' do
+        context 'and there are duplicate assistant records' do
+          it 'picks the last assistant'
+        end
+      end
       context 'employee with no assistant in current is set an assistant in new'
       context 'employee with no assistant in current is set an assistant in new but it doesnt exist'
       context 'employee with assistant in current is set the same assistant in new'
