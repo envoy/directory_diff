@@ -17,50 +17,49 @@ module DirectoryDiff
         process_employee(email, employee)
       end
 
-      unseen_employees.each do |employee|
-        add_transform(:insert, employee)
+      unseen_employees.each do |email, employee|
+        process_employee(email, employee)
       end
 
       transforms
     end
 
     protected
-    def process_employee(email, employee)
+    def process_employee(email, assistant_owner)
       new_employee = find_new_employee(email)
+      old_employee = find_current_employee(email)
 
       if new_employee.nil?
-        add_transform(:delete, employee)
-      elsif new_employee == employee
-        add_transform(:noop, employee)
+        add_transform(:delete, old_employee)
+        assistant_owner[3] = nil
       else
-        add_transform(:update, new_employee)
+        if assistant_email = new_employee[3]
+          process_employee(assistant_email, new_employee)
+        end
+
+        if old_employee.nil?
+          add_transform(:insert, new_employee)
+        elsif new_employee == old_employee
+          add_transform(:noop, old_employee)
+        else
+          add_transform(:update, new_employee)
+        end
       end
     end
 
     def add_transform(op, employee)
-      emit_transform(op, employee) do |operation|
-        transforms << operation
-      end
-    end
-
-    def prepend_transform(op, employee)
-      emit_transform(op, employee) do |operation|
-        transforms.unshift(operation)
-      end
-    end
-
-    def emit_transform(op, employee)
+      return if employee.nil?
       email = employee[1]
       existing_operation = transforms_index[email]
       if existing_operation.nil?
         operation = [op, *employee]
         transforms_index[email] = operation
-        yield operation
+        transforms << operation
       end
     end
 
     def find_new_employee(email)
-      transforms_index[email] || new_employees[email]
+      new_employees[email]
     end
 
     def find_current_employee(email)
@@ -77,7 +76,11 @@ module DirectoryDiff
 
     def unseen_employees
       emails = new_employees.keys - current_employees.keys
-      new_employees.values_at(*emails)
+      accum = []
+      emails.each do |email|
+        accum << [email, new_employees[email]]
+      end
+      accum
     end
 
     def build_index(directory)
