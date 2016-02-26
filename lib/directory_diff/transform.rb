@@ -1,10 +1,12 @@
 module DirectoryDiff
   class Transform
-    attr_reader :current_directory, :new_directory, :transforms
+    attr_reader :current_directory, :new_directory
+    attr_reader :transforms, :transforms_index
 
     def initialize(current_directory)
       @current_directory = current_directory
       @transforms = []
+      @transforms_index = {}
     end
 
     def into(new_directory)
@@ -12,15 +14,7 @@ module DirectoryDiff
       @new_directory = new_directory
 
       current_employees.each do |email, employee|
-        new_employee = find_new_employee(email)
-
-        if new_employee.nil?
-          add_transform(:delete, employee)
-        elsif new_employee == employee
-          add_transform(:noop, employee)
-        else
-          add_transform(:update, new_employee)
-        end
+        process_employee(email, employee)
       end
 
       unseen_employees.each do |employee|
@@ -31,12 +25,42 @@ module DirectoryDiff
     end
 
     protected
+    def process_employee(email, employee)
+      new_employee = find_new_employee(email)
+
+      if new_employee.nil?
+        add_transform(:delete, employee)
+      elsif new_employee == employee
+        add_transform(:noop, employee)
+      else
+        add_transform(:update, new_employee)
+      end
+    end
+
     def add_transform(op, employee)
-      transforms << [op, *employee]
+      emit_transform(op, employee) do |operation|
+        transforms << operation
+      end
+    end
+
+    def prepend_transform(op, employee)
+      emit_transform(op, employee) do |operation|
+        transforms.unshift(operation)
+      end
+    end
+
+    def emit_transform(op, employee)
+      email = employee[1]
+      existing_operation = transforms_index[email]
+      if existing_operation.nil?
+        operation = [op, *employee]
+        transforms_index[email] = operation
+        yield operation
+      end
     end
 
     def find_new_employee(email)
-      new_employees[email]
+      transforms_index[email] || new_employees[email]
     end
 
     def find_current_employee(email)

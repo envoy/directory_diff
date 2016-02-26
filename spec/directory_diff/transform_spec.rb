@@ -200,9 +200,9 @@ describe DirectoryDiff::Transform do
           it 'returns an :insert op for the assistant before the employee' do
             expect(transform.into([
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
-              ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143']
+              ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
             ])).to eq([
-              [:insert, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143']
+              [:insert, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
               [:insert, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com']
             ])
           end
@@ -212,7 +212,7 @@ describe DirectoryDiff::Transform do
       context 'and current directory contains an employee without assistant' do
         let(:current_directory) do
           [
-            ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143']
+            ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil]
           ]
         end
 
@@ -238,21 +238,21 @@ describe DirectoryDiff::Transform do
           it 'returns an :insert op for the assistant before the employee' do
             expect(transform.into([
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
-              ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143']
+              ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
             ])).to eq([
-              [:insert, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143']
+              [:insert, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
               [:update, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com']
             ])
           end
         end
       end
 
-      context 'and current directory contains an employee with assistant' do
-        context 'and assistant is missing in new directory'
-      end
+      # context 'and current directory contains an employee with assistant' do
+      #   context 'and assistant is missing in new directory'
+      # end
 
-      context 'and current directory contains just the assistant' do
-      end
+      # context 'and current directory contains just the assistant' do
+      # end
 
       # context 'assistant email does not exist in the new directory' do
       #   context 'and there are duplicate assistant records' do
