@@ -35,6 +35,16 @@ module DirectoryDiff
       else
         if assistant_email = new_employee[3]
           process_employee(assistant_email, new_employee)
+        else
+          # assistant_email may be nil. we only use the
+          # csv to *set* assistants. if it was nil, we
+          # backfill from current employee so that the
+          # new record appears to be the same as the
+          # current record
+          previous_assistant = old_employee&.fetch(3)
+          if find_new_employee(previous_assistant)
+            new_employee[3] = previous_assistant
+          end
         end
 
         if old_employee.nil?

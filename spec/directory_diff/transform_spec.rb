@@ -196,6 +196,18 @@ describe DirectoryDiff::Transform do
           end
         end
 
+        context 'new directory has circular reference' do
+          xit 'returns an :insert op for kamal and adolfo, nil out the assistant email column' do
+            expect(transform.into([
+              ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
+              ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', 'kamal@envoy.com']
+            ])).to eq([
+              [:insert, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
+              [:insert, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil]
+            ])
+          end
+        end
+
         context 'new directory has assistant email, and assistant record comes after' do
           it 'returns an :insert op for the assistant before the employee' do
             expect(transform.into([
@@ -204,6 +216,16 @@ describe DirectoryDiff::Transform do
             ])).to eq([
               [:insert, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
               [:insert, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com']
+            ])
+          end
+        end
+
+        context 'new directory has same email as assistant email' do
+          xit 'does not return multiple :insert op for the same employee, and nils out the assistant' do
+            expect(transform.into([
+              ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'kamal@envoy.com']
+            ])).to eq([
+              [:insert, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil]
             ])
           end
         end
@@ -247,23 +269,92 @@ describe DirectoryDiff::Transform do
         end
       end
 
-      # context 'and current directory contains an employee with assistant' do
-      #   context 'and assistant is missing in new directory'
-      # end
+      context 'and current directory contains an employee with assistant' do
+        let(:current_directory) do
+          [
+            ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
+            ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
+          ]
+        end
 
-      # context 'and current directory contains just the assistant' do
-      # end
+        context 'new directory doesnt set assistant email in last column' do
+          context 'and assistant is still included' do
+            it 'returns :noop, because assistant column only sets, doesnt delete' do
+              expect(transform.into([
+                ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+                ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
+              ])).to eq([
+                [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
+                [:noop, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
+              ])
+            end
+          end
 
-      # context 'assistant email does not exist in the new directory' do
-      #   context 'and there are duplicate assistant records' do
-      #     it 'picks the last assistant'
-      #   end
-      # end
-      # context 'assistant email does not exist in current directory' do
-      #   context 'and there are duplicate assistant records' do
-      #     it 'picks the last assistant'
-      #   end
-      # end
+          context 'but assistant is no longer included' do
+            it 'returns :update for kamal' do
+              expect(transform.into([
+                ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil]
+              ])).to eq([
+                [:update, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+                [:delete, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
+              ])
+            end
+          end
+        end
+
+        context 'new directory sets a new assistant in last column' do
+          context 'and assistant is still included' do
+            it 'returns :update for kamal, :noop for assistant, :insert for new assistant' do
+              expect(transform.into([
+                ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'matthew@envoy.com'],
+                ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
+                ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
+              ])).to eq([
+                [:insert, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil],
+                [:update, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'matthew@envoy.com'],
+                [:noop, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
+              ])
+            end
+          end
+
+          context 'and assistant is no longer included' do
+            it 'returns :update for kamal, :delete for old assistant, :insert for new assistant' do
+              expect(transform.into([
+                ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'matthew@envoy.com'],
+                ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
+              ])).to eq([
+                [:insert, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil],
+                [:update, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'matthew@envoy.com'],
+                [:delete, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
+              ])
+            end
+          end
+        end
+
+        context 'new directory sets a same email in last column' do
+          xit 'returns noop for kamal, assistant' do
+            expect(transform.into([
+              ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'kamal@envoy.com'],
+              ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
+            ])).to eq([
+              [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
+              [:noop, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
+            ])
+          end
+        end
+
+        context 'new directory sets same assistant email in last column' do
+          xit 'returns noop for kamal, assistant' do
+            expect(transform.into([
+              ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
+              ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
+            ])).to eq([
+              [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
+              [:noop, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
+            ])
+          end
+        end
+      end
 
       # context 'employee with no assistant in current is set an assistant in new'
       # context 'employee with no assistant in current is set an assistant in new but it doesnt exist'
