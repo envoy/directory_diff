@@ -332,7 +332,7 @@ describe DirectoryDiff::Transform do
         end
 
         context 'new directory sets a same email in last column' do
-          xit 'returns noop for kamal, assistant' do
+          it 'returns noop for kamal, assistant' do
             expect(transform.into([
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'kamal@envoy.com'],
               ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
@@ -344,13 +344,13 @@ describe DirectoryDiff::Transform do
         end
 
         context 'new directory sets same assistant email in last column' do
-          xit 'returns noop for kamal, assistant' do
+          it 'returns noop for kamal, assistant' do
             expect(transform.into([
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
               ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
             ])).to eq([
-              [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
-              [:noop, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
+              [:noop, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
+              [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com']
             ])
           end
         end

@@ -33,7 +33,10 @@ module DirectoryDiff
         add_transform(:delete, old_employee)
         assistant_owner[3] = nil
       else
-        if assistant_email = new_employee[3]
+        assistant_email = new_employee[3]
+        own_email = new_employee[1]
+
+        if assistant_email && assistant_email != own_email
           process_employee(assistant_email, new_employee)
         else
           # assistant_email may be nil. we only use the
