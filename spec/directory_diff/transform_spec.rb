@@ -10,7 +10,7 @@ describe DirectoryDiff::Transform do
     end
 
     it 'requires an enumerable' do
-      expect { transform.into(1) }.to raise_error
+      expect { transform.into(1) }.to raise_error(ArgumentError)
       expect { transform.into([]) }.not_to raise_error
     end
 
@@ -197,13 +197,15 @@ describe DirectoryDiff::Transform do
         end
 
         context 'new directory has circular reference' do
-          xit 'returns an :insert op for kamal and adolfo, nil out the assistant email column' do
+          it 'returns an :insert op for kamal and adolfo, nil out the assistant email column to prevent it' do
             expect(transform.into([
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
-              ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', 'kamal@envoy.com']
+              ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', 'matthew@envoy.com'],
+              ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', 'kamal@envoy.com']
             ])).to eq([
-              [:insert, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
-              [:insert, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil]
+              [:insert, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil],
+              [:insert, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', 'matthew@envoy.com'],
+              [:insert, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com']
             ])
           end
         end
@@ -221,7 +223,7 @@ describe DirectoryDiff::Transform do
         end
 
         context 'new directory has same email as assistant email' do
-          xit 'does not return multiple :insert op for the same employee, and nils out the assistant' do
+          it 'does not return multiple :insert op for the same employee, and nils out the assistant' do
             expect(transform.into([
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'kamal@envoy.com']
             ])).to eq([
@@ -355,14 +357,6 @@ describe DirectoryDiff::Transform do
           end
         end
       end
-
-      # context 'employee with no assistant in current is set an assistant in new'
-      # context 'employee with no assistant in current is set an assistant in new but it doesnt exist'
-      # context 'employee with assistant in current is set the same assistant in new'
-      # context 'employee with assistant in current is set the same assistant but it doesnt exist'
-      # context 'employee with assistant in current is set a different assistant in new'
-      # context 'employee with assistant in current is set a different assistant in new but it doesnt exist'
-      # context 'employee with assistant in current is not set an assistant in new'
     end
   end
 end

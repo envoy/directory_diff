@@ -29,6 +29,13 @@ module DirectoryDiff
       new_employee = find_new_employee(email)
       old_employee = find_current_employee(email)
 
+      # cycle detection
+      if transforms_index.has_key?(email)
+        assistant_owner[3] = old_employee&.fetch(3)
+        return
+      end
+      transforms_index[email] = nil
+
       if new_employee.nil?
         add_transform(:delete, old_employee)
         assistant_owner[3] = nil
@@ -36,7 +43,7 @@ module DirectoryDiff
         assistant_email = new_employee[3]
         own_email = new_employee[1]
 
-        if assistant_email && assistant_email != own_email
+        if assistant_email
           process_employee(assistant_email, new_employee)
         else
           # assistant_email may be nil. we only use the
