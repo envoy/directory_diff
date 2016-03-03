@@ -31,7 +31,6 @@ module DirectoryDiff
 
       # cycle detection
       if transforms_index.has_key?(email)
-        assistant_owner[3] = old_employee&.fetch(3)
         return
       end
       transforms_index[email] = nil
@@ -42,6 +41,10 @@ module DirectoryDiff
       else
         assistant_email = new_employee[3]
         own_email = new_employee[1]
+
+        if assistant_email == own_email
+          assistant_email = new_employee[3] = nil
+        end
 
         if assistant_email
           process_employee(assistant_email, new_employee)

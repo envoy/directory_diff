@@ -197,13 +197,13 @@ describe DirectoryDiff::Transform do
         end
 
         context 'new directory has circular reference' do
-          it 'returns an :insert op for kamal and adolfo, nil out the assistant email column to prevent it' do
+          it 'returns an :insert op for kamal, adolfo and matthew' do
             expect(transform.into([
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
               ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', 'matthew@envoy.com'],
               ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', 'kamal@envoy.com']
             ])).to eq([
-              [:insert, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil],
+              [:insert, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', 'kamal@envoy.com'],
               [:insert, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', 'matthew@envoy.com'],
               [:insert, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com']
             ])
@@ -215,6 +215,18 @@ describe DirectoryDiff::Transform do
             expect(transform.into([
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
               ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
+            ])).to eq([
+              [:insert, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
+              [:insert, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com']
+            ])
+          end
+        end
+
+        context 'new directory has assistant email, and assistant record comes before' do
+          it 'returns an :insert op for the assistant before the employee' do
+            expect(transform.into([
+              ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
+              ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com']
             ])).to eq([
               [:insert, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
               [:insert, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com']
