@@ -2,6 +2,7 @@ module DirectoryDiff
   class Transform
     attr_reader :current_directory, :new_directory
     attr_reader :transforms, :transforms_index
+    attr_reader :options
 
     def initialize(current_directory)
       @current_directory = current_directory
@@ -9,9 +10,10 @@ module DirectoryDiff
       @transforms_index = {}
     end
 
-    def into(new_directory)
+    def into(new_directory, options={})
       raise ArgumentError unless new_directory.respond_to?(:each)
       @new_directory = new_directory
+      @options = options || {}
 
       current_employees.each do |email, employee|
         process_employee(email, employee)
@@ -63,7 +65,7 @@ module DirectoryDiff
         if old_employee.nil?
           add_transform(:insert, new_employee)
         elsif new_employee == old_employee
-          add_transform(:noop, old_employee)
+          add_transform(:noop, old_employee) unless options[:skip_noop]
         else
           add_transform(:update, new_employee)
         end

@@ -69,6 +69,18 @@ describe DirectoryDiff::Transform do
           [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
         ])
       end
+
+      it 'returns empty array when skip_noop option is passed' do
+        expect(transform.into(
+          [
+            ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil],
+            ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil]
+          ],
+          {
+            skip_noop: true
+          }
+        )).to eq([])
+      end
     end
 
     context 'the new version has updates to the records' do
