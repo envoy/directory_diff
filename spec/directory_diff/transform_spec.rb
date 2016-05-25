@@ -398,7 +398,7 @@ describe DirectoryDiff::Transform do
         end
 
         context 'new directory has circular reference' do
-          it 'returns an :insert op for kamal, adolfo, matthew, and tristan' do
+          it 'returns an :insert op for kamal, adolfo, and matthew' do
             expect(transform.into([
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com,matthew@envoy.com'],
               ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', 'matthew@envoy.com'],
