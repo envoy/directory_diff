@@ -27,6 +27,7 @@ module DirectoryDiff
     end
 
     protected
+
     def process_employee(email, assistant_owner)
       new_employee = find_new_employee(email)
       old_employee = find_current_employee(email)
@@ -41,24 +42,33 @@ module DirectoryDiff
         add_transform(:delete, old_employee)
         assistant_owner[3] = nil
       else
-        assistant_email = new_employee[3]
         own_email = new_employee[1]
+        assistant_emails = new_employee[3].to_s.split(",")
+        assistant_emails.delete(own_email)
 
-        if assistant_email == own_email
-          assistant_email = new_employee[3] = nil
+        if assistant_emails.empty?
+          assistant_emails = new_employee[3] = nil
         end
 
-        if assistant_email
-          process_employee(assistant_email, new_employee)
+        if assistant_emails
+          assistant_emails.each do |assistant_email|
+            process_employee(assistant_email, new_employee)
+          end
         else
-          # assistant_email may be nil. we only use the
+          # assistant_emails may be nil. we only use the
           # csv to *set* assistants. if it was nil, we
           # backfill from current employee so that the
           # new record appears to be the same as the
           # current record
-          previous_assistant = old_employee&.fetch(3)
-          if find_new_employee(previous_assistant)
-            new_employee[3] = previous_assistant
+          previous_assistants = old_employee&.fetch(3).to_s.split(",")
+          previous_assistants.select! do |previous_assistant|
+            find_new_employee(previous_assistant)
+          end
+
+          if previous_assistants.empty?
+            new_employee[3] = nil
+          else
+            new_employee[3] = previous_assistants.join(",")
           end
         end
 
