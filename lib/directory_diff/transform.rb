@@ -74,8 +74,8 @@ module DirectoryDiff
 
         if old_employee.nil?
           add_transform(:insert, new_employee)
-        elsif new_employee == old_employee
-          add_transform(:noop, old_employee) unless options[:skip_noop]
+        elsif new_employee[0, 4] == old_employee[0, 4]
+          add_transform(:noop, new_employee) unless options[:skip_noop]
         else
           add_transform(:update, new_employee)
         end
