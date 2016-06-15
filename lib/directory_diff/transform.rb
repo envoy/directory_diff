@@ -111,11 +111,9 @@ module DirectoryDiff
 
     def unseen_employees
       emails = new_employees.keys - current_employees.keys
-      accum = []
-      emails.each do |email|
-        accum << [email, new_employees[email]]
+      emails.map do |email|
+        [email, new_employees[email]]
       end
-      accum
     end
 
     def build_index(directory)
