@@ -26,6 +26,16 @@ describe DirectoryDiff::Transform do
           [:insert, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
         ])
       end
+
+      it 'passes through extra fields untouched' do
+        expect(transform.into([
+          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil, 'foo'],
+          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
+        ])).to eq([
+          [:insert, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil, 'foo'],
+          [:insert, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
+        ])
+      end
     end
 
     context 'the new version is an empty directory' do
@@ -49,6 +59,25 @@ describe DirectoryDiff::Transform do
 
       it 'returns no ops' do
         expect(transform.into([])).to eq([])
+      end
+    end
+
+    context 'the current version is exactly the same as the new directory except for the extra field' do
+      let(:current_directory) do
+        [
+          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
+        ]
+      end
+
+      it 'returns :noops ops' do # reordered to show order doesn't matter
+        expect(transform.into([
+          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil, 'foo'],
+          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil]
+        ])).to eq([
+          [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+          [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil, 'foo']
+        ])
       end
     end
 
