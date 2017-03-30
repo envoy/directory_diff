@@ -40,7 +40,10 @@ module DirectoryDiff
 
       if new_employee.nil?
         add_transform(:delete, old_employee)
-        assistant_owner[3] = nil
+        assistants_string = assistant_owner[3].to_s.split(",").reject do |assistant|
+                              assistant == email
+                            end.join(",")
+        assistant_owner[3] = assistants_string == "" ? nil : assistants_string
       else
         own_email = new_employee[1]
         assistant_emails = new_employee[3].to_s.split(",")

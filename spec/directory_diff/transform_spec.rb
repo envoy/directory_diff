@@ -426,6 +426,18 @@ describe DirectoryDiff::Transform do
           end
         end
 
+        context 'new directory has assistant emails, but no assistant records for one assistant' do
+          it 'returns an :insert op for employee and assistants, and sets the assistant that does exist' do
+            expect(transform.into([
+              ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com,tristan@envoy.com'],
+              ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
+            ])).to eq([
+              [:insert, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
+              [:insert, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com']
+            ])
+          end
+        end
+
         context 'new directory has circular reference' do
           it 'returns an :insert op for kamal, adolfo, and matthew' do
             expect(transform.into([
@@ -500,6 +512,18 @@ describe DirectoryDiff::Transform do
               ['Kamal Changed', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com,matthew@envoy.com']
             ])).to eq([
               [:update, 'Kamal Changed', 'kamal@envoy.com', '415-935-3143', nil]
+            ])
+          end
+        end
+
+        context 'new directory has assistant emails, but no assistant records for one assistant' do
+          it 'returns an :update op for employee and :insert for assistant, and sets the assistant that does exist' do
+            expect(transform.into([
+              ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com,tristan@envoy.com'],
+              ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
+            ])).to eq([
+              [:insert, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
+              [:update, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com']
             ])
           end
         end
