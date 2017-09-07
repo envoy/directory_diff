@@ -122,9 +122,12 @@ module DirectoryDiff
     def build_index(directory)
       accum = {}
       directory.each do |employee|
+        # Item at index 1 is email, so downcase it
+        employee[1] = employee[1].downcase
         email = employee[1]
         accum[email] = employee
       end
+
       accum
     end
   end
