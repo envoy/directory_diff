@@ -123,7 +123,7 @@ module DirectoryDiff
       accum = {}
       directory.each do |employee|
         # Item at index 1 is email, so downcase it
-        employee[1] = employee[1].downcase
+        employee[1] = employee[1].downcase unless employee[1].nil?
         email = employee[1]
         accum[email] = employee
       end
