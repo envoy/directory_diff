@@ -26,7 +26,7 @@ module ActiveRecordPgStuff
         tname = "temporary_#{self.table_name}_#{self.object_id}"
         self.klass.connection.with_temporary_table tname, self.to_sql do |name|
           dec     = Decorator.new self.klass, name
-          rel     = ActiveRecord::Relation.new dec, dec.arel_table
+          rel     = ActiveRecord::Relation.new dec, table: dec.arel_table
           rel.readonly!
           yield rel
         end
