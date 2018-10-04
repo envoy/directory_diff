@@ -15,7 +15,7 @@ module DirectoryDiff
       @new_directory = new_directory
       @options = options || {}
 
-      current_employees.each do |email, employee|
+      new_employees.each do |email, employee|
         process_employee(email, employee)
       end
 
@@ -96,9 +96,9 @@ module DirectoryDiff
     end
 
     def unseen_employees
-      emails = new_employees.keys - current_employees.keys
+      emails = current_employees.keys - new_employees.keys
       emails.map do |email|
-        [email, new_employees[email]]
+        [email, current_employees[email]]
       end
     end
 
