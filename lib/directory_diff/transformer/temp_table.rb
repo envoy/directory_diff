@@ -101,10 +101,7 @@ module DirectoryDiff
                   select
                     email,
                     name,
-                    case
-                      when array_length(assistants, 1) is null then null
-                      else unnest(assistants)
-                    end as assistant
+                    unnest(assistants) assistant
                   from #{csv.name} 
                 ),
                 own_email_removed as
@@ -112,9 +109,7 @@ module DirectoryDiff
                   select
                     a.*
                   from unnested_assistants a
-                  where
-                    a.email != a.assistant
-                    or a.assistant is null
+                  where a.email != a.assistant
                 ),
                 missing_assistants_removed as
                 (
