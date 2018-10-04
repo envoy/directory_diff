@@ -1,11 +1,23 @@
 language: ruby
-addons:
-  postgresql: 9.6
-services:
-  - postgresql 
-rvm:
-  - 2.4.4
-  - 2.5.1
+dist: xenial
+matrix:
+  include:
+    - name: "Run Ruby 2.4.4 against pg 9"
+      rvm: 2.4.4
+      addons:
+        postgresql: 9.6
+    - name: "Run Ruby 2.4.4 against pg 10"
+      rvm: 2.4.4
+      addons:
+        postgresql: 10
+    - name: "Run Ruby 2.5.1 against pg 9"
+      rvm: 2.5.1
+      addons:
+        postgresql: 9.6
+    - name: "Run Ruby 2.5.1 against pg 10"
+      rvm: 2.5.1
+      addons:
+        postgresql: 10
 before_install: gem install bundler -v 1.11.2
 script:
   - bundle exec rake db:create
