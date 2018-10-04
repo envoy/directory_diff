@@ -425,9 +425,9 @@ shared_examples "a directory transformer" do
               ]
             end
 
-            it 'returns :update for kamal' do
+            it 'returns :noop for kamal' do
               expect(subject).to eq([
-                [:update, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+                [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
                 [:delete, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
               ])
             end
@@ -715,9 +715,9 @@ shared_examples "a directory transformer" do
               ]
             end
 
-            it 'returns :update for kamal' do
+            it 'returns :noop for kamal' do
               expect(subject).to eq([
-                [:update, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
+                [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com,matthew@envoy.com'],
                 [:delete, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
                 [:delete, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
               ])
