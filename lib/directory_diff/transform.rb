@@ -56,11 +56,18 @@ module DirectoryDiff
         # assistant_emails may be nil. we only use the csv to *set*
         # assistants. if it was nil, we backfill from current employee so that
         # the new record appears to be the same as the current record
-        new_employee[3] = old_employee&.fetch(3) if assistant_emails.empty?
+        if assistant_emails.empty?
+          original_assistant_value = nil
+          new_employee[3] = old_employee&.fetch(3) 
+        else
+          original_assistant_value = new_employee[3]
+        end
 
         if old_employee.nil?
           add_transform(:insert, new_employee)
         elsif new_employee[0, 4] == old_employee[0, 4]
+          # restore assistant value after cleanup like missing assistants and own email
+          new_employee[3] = original_assistant_value
           add_transform(:noop, new_employee) unless options[:skip_noop]
         else
           add_transform(:update, new_employee)
