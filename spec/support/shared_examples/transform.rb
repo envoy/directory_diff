@@ -64,10 +64,10 @@ shared_examples "a directory transformer" do
         ]
       end
 
-      it 'returns :noops ops' do # reordered to show order doesn't matter
+      it 'returns :noops ops' do # reordered to show order follows csv
         expect(subject).to eq([
-          [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
-          [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil, 'foo']
+          [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil, 'foo'],
+          [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil]
         ])
       end
     end
@@ -86,10 +86,10 @@ shared_examples "a directory transformer" do
         ]
       end
 
-      it 'returns :noops ops' do # reordered to show order doesn't matter
+      it 'returns :noops ops' do # reordered to show order follows csv
         expect(subject).to eq([
-          [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
-          [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
+          [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil],
+          [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil]
         ])
       end
 
@@ -116,10 +116,10 @@ shared_examples "a directory transformer" do
         ]
       end
 
-      it 'returns :noops ops' do # reordered to show order doesn't matter
+      it 'returns :noops ops' do # reordered to show order follows csv
         expect(subject).to eq([
-          [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
-          [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
+          [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil],
+          [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil]
         ])
       end
     end
