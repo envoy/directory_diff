@@ -1,4 +1,5 @@
 require_relative "transformer/in_memory"
+require_relative "transformer/temp_table"
 
 module DirectoryDiff
   class Transform
@@ -9,7 +10,21 @@ module DirectoryDiff
     end
 
     def into(new_directory, options = {})
-      Transformer::InMemory.new(current_directory).into(new_directory, options)
+      processor_class = processor_for(options[:processor])
+      processor_class.new(current_directory).into(new_directory, options)
+    end
+
+    private
+
+    def processor_for(processor)
+      case processor
+      when nil, :in_memory
+        Transformer::InMemory
+      when :temp_table
+        Transformer::TempTable
+      else
+        raise ArgumentError, "unsupported processor #{processor.inspect}"
+      end
     end
   end
 end
