@@ -1,4 +1,4 @@
-require "envoy/activerecord_pg_stuff"
+require "activerecord_pg_stuff"
 
 Arel::Predications.module_eval do
   def contains(other)
