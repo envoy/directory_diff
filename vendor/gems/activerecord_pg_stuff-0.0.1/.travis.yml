@@ -1,9 +1,0 @@
-rvm:
-- 1.9.3
-- 2.0.0
-
-env:
-  global:
-    - DATABASE_URL=postgresql://postgres@localhost
-
-script: bundle exec rake
