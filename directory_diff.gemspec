@@ -22,7 +22,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "activerecord", ">= 5.1.4"
   spec.add_dependency "pg", "~> 1.1.3"
   spec.add_dependency "temping", "~> 3.10.0"
-  spec.add_dependency "envoy_activerecord_pg_stuff", "~> 0.0.2"
+  spec.add_dependency "envoy-activerecord_pg_stuff", "~> 0.0.3"
 
   spec.add_development_dependency "bundler", "~> 1.11"
   spec.add_development_dependency "rake", "~> 10.0"
