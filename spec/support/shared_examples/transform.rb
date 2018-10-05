@@ -1,7 +1,8 @@
-shared_examples "a directory transformer" do
+shared_examples "a directory transformer" do |processor|
   describe '#into' do
     subject do
-      DirectoryDiff.transform(source_directory).into(target_directory, options)
+      DirectoryDiff.transform(source_directory)
+        .into(target_directory, options.merge(processor: processor))
     end
     let(:options) { {} }
 
