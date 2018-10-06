@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "activerecord_pg_stuff"
 
 Arel::Predications.module_eval do
@@ -23,44 +25,8 @@ module DirectoryDiff
       # @param new_directory a table containing only the new records to compare
       #                      against, most likely a temp table.
       def into(new_directory, options = {})
-        projection = <<-SQL
-          name, 
-          lower(email) email, 
-          coalesce(phone_number, '') phone_number,
-          array_remove(
-            regexp_split_to_array(
-              coalesce(assistants, ''),
-              '\s*,\s*'
-            )::varchar[],
-            ''
-          ) assistants
-        SQL
-        current_directory.select(projection).temporary_table do |temp_current_directory|
-          # Remove dupe email rows, keeping the last one
-          latest_unique_sql = <<-SQL
-            SELECT 
-              DISTINCT ON (lower(email)) name, 
-              lower(email) email,
-              coalesce(phone_number, '') phone_number,
-              array_remove(
-                regexp_split_to_array(
-                  coalesce(assistants, ''),
-                  '\s*,\s*'
-                )::varchar[],
-                ''
-              ) assistants, 
-              extra, 
-              ROW_NUMBER () OVER ()
-            FROM 
-              #{new_directory.arel_table.name} 
-            ORDER BY 
-              lower(email), 
-              row_number desc
-          SQL
-
-          new_directory.select('*')
-            .from(Arel.sql("(#{latest_unique_sql}) as t"))
-            .order("row_number").temporary_table do |deduped_csv|
+        temp_table(current_directory_relation) do |temp_current_directory|
+          new_directory_temp_table(new_directory) do |deduped_csv|
             # Get Arel tables for referencing fields, table names
             employees = temp_current_directory.table
             csv = deduped_csv.table
@@ -68,8 +34,12 @@ module DirectoryDiff
             # Reusable Arel predicates
             csv_employee_join = csv[:email].eq(employees[:email])
             attributes_unchanged = employees[:name].eq(csv[:name])
-                                    .and(employees[:phone_number].eq(csv[:phone_number]))
-                                    .and(employees[:assistants].contains(csv[:assistants]))
+                                    .and(
+                                      employees[:phone_number].eq(csv[:phone_number])
+                                    )
+                                    .and(
+                                      employees[:assistants].contains(csv[:assistants])
+                                    )
 
             # Creates joins between the temp table and the csv table and
             # vice versa
@@ -87,98 +57,44 @@ module DirectoryDiff
             # left
             employee_records = temp_current_directory.joins(employees_to_csv)
 
-            # Cleanup some bad records
-            # 1. Assistant email is set on an employee, but no assistant record
-            #    in csv. Remove the assistant email.
-            # 2. Assistant email is employee's own email. Remove the assistant
-            #    email.
-            # TODO move this into the temp table creation above
-            # https://www.db-fiddle.com/f/gxg6qABP1LygYvvgRvyH2N/1
-            cleanup_sql = <<-SQL
-              with
-                unnested_assistants as
-                (
-                  select
-                    email,
-                    name,
-                    unnest(assistants) assistant
-                  from #{csv.name} 
-                ),
-                own_email_removed as
-                (
-                  select
-                    a.*
-                  from unnested_assistants a
-                  where a.email != a.assistant
-                ),
-                missing_assistants_removed as
-                (
-                  select
-                    a.*
-                  from own_email_removed a
-                  left outer join #{csv.name} b on a.assistant = b.email
-                  where
-                    (a.assistant is null and b.email is null)
-                    or (a.assistant is not null and b.email is not null)
-                ),
-                only_valid_assistants as
-                (
-                  select
-                    a.email, 
-                    a.name,
-                    array_remove(
-                      array_agg(b.assistant),
-                      null
-                    ) assistants
-                  from #{csv.name} a
-                  left outer join missing_assistants_removed b
-                  using (email)
-                  group by
-                    a.email, a.name
-                )
-              update #{csv.name}
-              set assistants = only_valid_assistants.assistants
-              from only_valid_assistants
-              where #{csv.name}.email = only_valid_assistants.email
-            SQL
-            deduped_csv.connection.execute(cleanup_sql)
+            connection.execute(SQL.cleanup_sql(csv.name))
+
+            csv_fields = [:name, :email, :phone_number, :assistants, :extra]
 
             # new records are records in the new directory that don't exist in
             # the current directory
-            new_records = csv_records.select("'insert'::varchar operation, row_number")
-                            .select(:name, :email, :phone_number, :assistants, :extra)
+            new_records = csv_records
+                            .select("'insert'::varchar operation, row_number")
+                            .select(csv_fields)
                             .where({ employees.name => { email: nil } })
             # deleted records are records in the current directory that don't
             # exist in the new directory
-            deleted_records = employee_records.select("'delete'::varchar operation, row_number")
-                                .select(:name, :email, :phone_number, :assistants, :extra)
+            deleted_records = employee_records
+                                .select("'delete'::varchar operation, row_number")
+                                .select(csv_fields)
                                 .where({ csv.name => { email: nil } })
             # changed records are records that have difference in name, phone
             # number and/or assistants
-            changed_records = csv_records.select("'update'::varchar operation, row_number")
-                                .select(:name, :email, :phone_number, :assistants, :extra)
+            changed_records = csv_records
+                                .select("'update'::varchar operation, row_number")
+                                .select(csv_fields)
                                 .where.not(attributes_unchanged)
             # unchanged records are records that are exactly the same in both
             # directories (without considering the extra field)
-            unchanged_records = csv_records.select("'noop'::varchar operation, row_number")
-                                  .select(:name, :email, :phone_number, :assistants, :extra)
+            unchanged_records = csv_records
+                                  .select("'noop'::varchar operation, row_number")
+                                  .select(csv_fields)
                                   .where(attributes_unchanged)
 
             # create temp table for holding operations
-            operations_temp_table = "temporary_operations_#{self.object_id}"
-            deduped_csv.connection.with_temporary_table operations_temp_table, new_records.to_sql do |name|
-              dec = ActiveRecordPgStuff::Relation::TemporaryTable::Decorator.new csv_records.klass, name
-              rel = ActiveRecord::Relation.new dec, table: dec.arel_table
-              rel.readonly!
-
-              rel.connection.execute("insert into #{name}(operation, row_number, name, email, phone_number, assistants, extra) #{deleted_records.to_sql}")
-              rel.connection.execute("insert into #{name}(operation, row_number, name, email, phone_number, assistants, extra) #{changed_records.to_sql}")
-
+            temp_table(new_records.to_sql) do |operations|
+              insert_into_operations(operations, deleted_records.to_sql)
+              insert_into_operations(operations, changed_records.to_sql)
               if options[:skip_noop] != true
-                rel.connection.execute("insert into #{name}(operation, row_number, name, email, phone_number, assistants, extra) #{unchanged_records.to_sql}")
+                insert_into_operations(operations, unchanged_records.to_sql)
               end
 
-              rel.order(:row_number).each do |operation|
+              operations.order(:row_number).each do |operation|
                 add_operation(operation)
               end
             end
@@ -189,6 +105,53 @@ module DirectoryDiff
       end
 
       private
+
+      def current_directory_relation(&block)
+        current_directory.select(SQL.current_directory_projection)
+      end
+
+      def new_directory_temp_table(source, &block)
+        relation = source.select("*")
+          .from(Arel.sql("(#{SQL.latest_unique_sql(source.table.name)}) as t"))
+          .order("row_number")
+
+        temp_table(relation, &block)
+      end
+
+      def temp_table(source = nil, &block)
+        return source.temporary_table(&block) if source.is_a?(ActiveRecord::Relation)
+
+        create_temp_table(source) do |name|
+          klass = current_directory.klass
+          dec = ActiveRecordPgStuff::Relation::TemporaryTable::Decorator.new(klass, name)
+          rel = ActiveRecord::Relation.new(dec, table: dec.arel_table)
+          rel.readonly!
+          block.call(rel)
+        end
+      end
+
+      def create_temp_table(initial_sql=nil)
+        table_name = "temporary_#{(Time.now.to_f * 1000).to_i}"
+
+        if initial_sql
+          connection.with_temporary_table(table_name, initial_sql) do |name|
+            yield name
+          end
+        else
+          connection.transaction do
+            begin
+              connection.create_table(table_name, temporary: true)
+              yield table_name
+            ensure
+              connection.drop_table(table_name)
+            end
+          end
+        end
+      end
+
+      def insert_into_operations(relation, sql)
+        connection.execute(SQL.insert_into_operations(relation.table.name, sql))
+      end
 
       def add_operation(operation)
         op = [
@@ -223,10 +186,131 @@ module DirectoryDiff
         (assistants || '').split(',').each do |assistant_email|
           next if tail.include?(assistant_email)
           assistant_operation = operations.find { |_, _, email| email == assistant_email }
-          process_operation(assistant_operation, operations, prioritized_operations, tail.add(email))
+          process_operation(
+            assistant_operation,
+            operations,
+            prioritized_operations,
+            tail.add(email)
+          )
         end
 
         prioritized_operations << operation
+      end
+
+      def connection
+        current_directory.connection
+      end
+    end
+
+    module SQL
+      # Cleanup some bad records
+      # 1. Assistant email is set on an employee, but no assistant record
+      #    in csv. Remove the assistant email.
+      # 2. Assistant email is employee's own email. Remove the assistant
+      #    email.
+      # TODO move this into the temp table creation above
+      # https://www.db-fiddle.com/f/gxg6qABP1LygYvvgRvyH2N/1
+      def self.cleanup_sql(table_name)
+        <<-SQL
+          with
+            unnested_assistants as
+            (
+              select
+                email,
+                name,
+                unnest(assistants) assistant
+              from #{table_name}
+            ),
+            own_email_removed as
+            (
+              select
+                a.*
+              from unnested_assistants a
+              where a.email != a.assistant
+            ),
+            missing_assistants_removed as
+            (
+              select
+                a.*
+              from own_email_removed a
+              left outer join #{table_name} b on a.assistant = b.email
+              where
+                (a.assistant is null and b.email is null)
+                or (a.assistant is not null and b.email is not null)
+            ),
+            only_valid_assistants as
+            (
+              select
+                a.email,
+                a.name,
+                array_remove(
+                  array_agg(b.assistant),
+                  null
+                ) assistants
+              from #{table_name} a
+              left outer join missing_assistants_removed b
+              using (email)
+              group by
+                a.email, a.name
+            )
+          update #{table_name}
+          set assistants = only_valid_assistants.assistants
+          from only_valid_assistants
+          where #{table_name}.email = only_valid_assistants.email
+        SQL
+      end
+
+      # Remove dupe email rows, keeping the last one
+      def self.latest_unique_sql(table_name)
+        <<-SQL
+          SELECT
+            DISTINCT ON (lower(email)) name,
+            lower(email) email,
+            coalesce(phone_number, '') phone_number,
+            array_remove(
+              regexp_split_to_array(
+                coalesce(assistants, ''),
+                '\s*,\s*'
+              )::varchar[],
+              ''
+            ) assistants,
+            extra,
+            ROW_NUMBER () OVER ()
+          FROM
+            #{table_name}
+          ORDER BY
+            lower(email),
+            row_number desc
+        SQL
+      end
+
+      def self.current_directory_projection
+        <<-SQL
+          name,
+          lower(email) email,
+          coalesce(phone_number, '') phone_number,
+          array_remove(
+            regexp_split_to_array(
+              coalesce(assistants, ''),
+              '\s*,\s*'
+            )::varchar[],
+            ''
+          ) assistants
+        SQL
+      end
+
+      def self.insert_into_operations(table_name, sql)
+        <<-SQL
+          insert into #{table_name}(
+            operation,
+            row_number,
+            name,
+            email,
+            phone_number,
+            assistants,
+            extra
+          ) #{sql}
+        SQL
       end
     end
   end
