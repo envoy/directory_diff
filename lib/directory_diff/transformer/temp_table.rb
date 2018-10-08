@@ -111,11 +111,49 @@ module DirectoryDiff
       end
 
       def new_directory_temp_table(source, &block)
-        relation = source.select("*")
-          .from(Arel.sql("(#{SQL.latest_unique_sql(source.table.name)}) as t"))
-          .order("row_number")
+        convert_to_relation(source) do |relation|
+          relation = relation.select("*")
+            .from(Arel.sql("(#{SQL.latest_unique_sql(relation.table.name)}) as t"))
+            .order("row_number")
 
-        temp_table(relation, &block)
+          temp_table(relation, &block)
+        end
+      end
+
+      def convert_to_relation(source, &block)
+        return block.call(source) if source.is_a?(ActiveRecord::Relation)
+
+        temp_table do |relation|
+          table_name = relation.table.name
+          connection.change_table(table_name) do |t|
+            t.column :name, :string
+            t.column :email, :string
+            t.column :phone_number, :string
+            t.column :assistants, :string
+            t.column :extra, :string
+          end
+          insert_into_csv_table(table_name, source)
+          block.call(relation)
+        end
+      end
+
+      # TODO chunk this into batch sizes
+      def insert_into_csv_table(table_name, records)
+        return if records.empty?
+
+        values = records.map do |row|
+          (name, email, phone_number, assistants, extra) = row
+          columns = [
+            connection.quote(name),
+            connection.quote(email),
+            connection.quote(phone_number),
+            connection.quote(assistants),
+            connection.quote(extra)
+          ]
+          "(#{columns.join(", ")})"
+        end
+
+        connection.execute(SQL.insert_into_temp_csv_table(table_name, values))
       end
 
       def temp_table(source = nil, &block)
@@ -310,6 +348,18 @@ module DirectoryDiff
             assistants,
             extra
           ) #{sql}
+        SQL
+      end
+
+      def self.insert_into_temp_csv_table(table_name, values)
+        <<-SQL
+          insert into #{table_name}(
+            name,
+            email,
+            phone_number,
+            assistants,
+            extra
+          ) values #{values.join(", ")}
         SQL
       end
     end
