@@ -106,7 +106,7 @@ module DirectoryDiff
 
       private
 
-      def current_directory_relation(&block)
+      def current_directory_relation
         current_directory.select(SQL.current_directory_projection)
       end
 
