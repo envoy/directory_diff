@@ -64,11 +64,24 @@ module DirectoryDiff
             original_assistant_value = new_employee[3]
           end
 
+          # phone_number may be nil. we only use the csv to *set* phone numbers if
+          # it has a value. if it was nil, we backfill from current employee so that
+          # the new record apperas to the be same as the current record
+          phone_number = new_employee[2].presence
+          if phone_number.nil?
+            original_phone_number_value = nil
+            new_employee[2] = old_employee&.fetch(2)
+          else
+            original_phone_number_value = new_employee[2]
+          end
+
           if old_employee.nil?
             add_transform(:insert, new_employee)
           elsif new_employee[0, 4] == old_employee[0, 4]
             # restore assistant value after cleanup like missing assistants and own email
             new_employee[3] = original_assistant_value
+            # restore phone number value
+            new_employee[2] = original_phone_number_value
             add_transform(:noop, new_employee) unless options[:skip_noop]
           else
             add_transform(:update, new_employee)
