@@ -173,7 +173,12 @@ module DirectoryDiff
           if activerecord52?
             rel = ActiveRecord::Relation.new(dec)
           else
-            rel = ActiveRecord::Relation.new(dec, dec.arel_table, dec.predicate_builder, {})
+            rel = ActiveRecord::Relation.new(
+              dec,
+              dec.arel_table,
+              dec.predicate_builder,
+              {}
+            )
           end
           rel.readonly!
           block.call(rel)
