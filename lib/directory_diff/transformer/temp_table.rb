@@ -25,7 +25,7 @@ module DirectoryDiff
       # @param new_directory a table containing only the new records to compare
       #                      against, most likely a temp table.
       def into(new_directory, options = {})
-        temp_table(current_directory_relation) do |temp_current_directory|
+        current_directory_temp_table do |temp_current_directory|
           new_directory_temp_table(new_directory) do |deduped_csv|
             # Get Arel tables for referencing fields, table names
             employees = temp_current_directory.table
@@ -106,8 +106,12 @@ module DirectoryDiff
 
       private
 
-      def current_directory_relation
-        current_directory.select(SQL.current_directory_projection)
+      def current_directory_temp_table(&block)
+        # outer temp table is required so that the projection does not run into
+        # ambiguous column issues
+        temp_table(current_directory) do |rel|
+          temp_table(rel.select(SQL.current_directory_projection), &block)
+        end
       end
 
       def new_directory_temp_table(source, &block)
