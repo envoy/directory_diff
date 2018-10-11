@@ -60,6 +60,7 @@ module DirectoryDiff
             connection.execute(SQL.cleanup_sql(csv.name))
 
             csv_fields = %I[name email phone_number assistants extra].map { |c| csv[c] }
+            emp_fields = %I[name email phone_number assistants].map { |c| employees[c] }
 
             # new records are records in the new directory that don't exist in
             # the current directory
@@ -71,7 +72,8 @@ module DirectoryDiff
             # exist in the new directory
             deleted_records = employee_records
                                 .select("'delete'::varchar operation, row_number")
-                                .select(csv_fields)
+                                .select(emp_fields)
+                                .select("null extra")
                                 .where({ csv.name => { email: nil } })
             # changed records are records that have difference in name, phone
             # number and/or assistants
