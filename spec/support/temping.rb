@@ -1,4 +1,5 @@
 require "temping"
+require "yaml"
 
 RSpec.configure do |config|
   config.before :suite do

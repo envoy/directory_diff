@@ -106,7 +106,7 @@ module DirectoryDiff
 
       private
 
-      def current_directory_relation(&block)
+      def current_directory_relation
         current_directory.select(SQL.current_directory_projection)
       end
 
@@ -162,7 +162,11 @@ module DirectoryDiff
         create_temp_table(source) do |name|
           klass = current_directory.klass
           dec = ActiveRecordPgStuff::Relation::TemporaryTable::Decorator.new(klass, name)
-          rel = ActiveRecord::Relation.new(dec, table: dec.arel_table)
+          if activerecord52?
+            rel = ActiveRecord::Relation.new(dec)
+          else
+            rel = ActiveRecord::Relation.new(dec, dec.arel_table, dec.predicate_builder, {})
+          end
           rel.readonly!
           block.call(rel)
         end
@@ -237,6 +241,10 @@ module DirectoryDiff
 
       def connection
         current_directory.connection
+      end
+
+      def activerecord52?
+        ActiveRecord.gem_version >= Gem::Version.new("5.2.x")
       end
     end
 
