@@ -170,12 +170,12 @@ shared_examples "a directory transformer" do |processor|
         end
       end
 
-      context "when the phone number field comes in as nil" do
+      context "when the phone number field comes in as nil or empty string" do
         let(:new_directory) do
           [
             ['Kamal Mahyuddin', 'kamal@envoy.com', nil, nil],
             ['Adolfo Builes', 'adolfo@envoy.com', nil, nil],
-            ['Matthew Johnston', 'matthew@envoy.com', nil, nil]
+            ['Matthew Johnston', 'matthew@envoy.com', '', nil]
           ]
         end
 
