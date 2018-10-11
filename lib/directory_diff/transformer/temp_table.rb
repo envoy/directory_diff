@@ -59,7 +59,7 @@ module DirectoryDiff
 
             connection.execute(SQL.cleanup_sql(csv.name))
 
-            csv_fields = [:name, :email, :phone_number, :assistants, :extra]
+            csv_fields = %I[name email phone_number assistants extra].map { |c| csv[c] }
 
             # new records are records in the new directory that don't exist in
             # the current directory
