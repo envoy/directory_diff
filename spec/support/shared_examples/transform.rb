@@ -813,7 +813,7 @@ shared_examples "a directory transformer" do |processor|
             ] 
           end
 
-          it 'returns noop for kamal, assistants' do
+          it 'returns update for kamal, noop for assistants' do
             expect(subject).to eq([
               [:noop, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
               [:update, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
