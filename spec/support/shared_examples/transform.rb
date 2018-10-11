@@ -170,6 +170,24 @@ shared_examples "a directory transformer" do |processor|
         end
       end
 
+      context "when the phone number field comes in as nil" do
+        let(:new_directory) do
+          [
+            ['Kamal Mahyuddin', 'kamal@envoy.com', nil, nil],
+            ['Adolfo Builes', 'adolfo@envoy.com', nil, nil],
+            ['Matthew Johnston', 'matthew@envoy.com', nil, nil]
+          ]
+        end
+
+        it "returns a noop, because nil phone number does not overwrite" do
+          expect(subject).to eq([
+            [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', nil, nil],
+            [:noop, 'Adolfo Builes', 'adolfo@envoy.com', nil, nil],
+            [:noop, 'Matthew Johnston', 'matthew@envoy.com', nil, nil]
+          ])
+        end
+      end
+
       context "in both name and phone number fields" do
         let(:new_directory) do
           [
