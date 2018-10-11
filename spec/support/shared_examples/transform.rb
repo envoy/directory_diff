@@ -803,6 +803,24 @@ shared_examples "a directory transformer" do |processor|
             ])
           end
         end
+
+        context 'new directory sets a subset of assistant emails in last column' do
+          let(:new_directory) do
+            [
+              ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
+              ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
+              ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
+            ] 
+          end
+
+          it 'returns noop for kamal, assistants' do
+            expect(subject).to eq([
+              [:noop, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
+              [:update, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
+              [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil],
+            ])
+          end
+        end
       end
     end
   end
