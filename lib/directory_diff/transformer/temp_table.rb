@@ -36,6 +36,10 @@ module DirectoryDiff
             attributes_unchanged = employees[:name].eq(csv[:name])
                                     .and(
                                       employees[:phone_number].eq(csv[:phone_number])
+                                        .or(csv[:phone_number].eq(""))
+                                        # ☝🏽 Comparing to an empty string because we cast
+                                        # phone number to an empty string. The reason is
+                                        # comparing NULL = NULL is always false in SQL
                                     )
                                     .and(
                                       employees[:assistants].contains(csv[:assistants])
@@ -169,7 +173,12 @@ module DirectoryDiff
           if activerecord52?
             rel = ActiveRecord::Relation.new(dec)
           else
-            rel = ActiveRecord::Relation.new(dec, dec.arel_table, dec.predicate_builder, {})
+            rel = ActiveRecord::Relation.new(
+              dec,
+              dec.arel_table,
+              dec.predicate_builder,
+              {}
+            )
           end
           rel.readonly!
           block.call(rel)
