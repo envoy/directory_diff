@@ -2,12 +2,6 @@
 
 require "activerecord_pg_stuff"
 
-Arel::Predications.module_eval do
-  def contains(other)
-    Arel::Nodes::InfixOperation.new(:"@>", self, other)
-  end
-end
-
 module DirectoryDiff
   module Transformer
     class TempTable
@@ -42,7 +36,8 @@ module DirectoryDiff
                                         # comparing NULL = NULL is always false in SQL
                                     )
                                     .and(
-                                      employees[:assistants].contains(csv[:assistants])
+                                      employees[:assistants].eq(csv[:assistants])
+                                        .or(csv[:assistants].eq("{}"))
                                     )
 
             # Creates joins between the temp table and the csv table and
