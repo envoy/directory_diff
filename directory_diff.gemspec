@@ -21,7 +21,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "activerecord", ">= 5.1"
   spec.add_dependency "pg", "~> 1.1.3"
-  spec.add_dependency "activerecord_pg_stuff", "~> 0.2.1"
 
   spec.add_development_dependency "bundler", "~> 1.11"
   spec.add_development_dependency "rake", "~> 10.0"
