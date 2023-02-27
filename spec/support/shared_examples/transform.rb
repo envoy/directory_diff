@@ -54,21 +54,21 @@ shared_examples "a directory transformer" do |processor|
     context 'the current version is exactly the same as the new directory except for the extra field' do
       let(:current_directory) do
         [
-          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
-          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
+          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil, nil],
+          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil, nil]
         ]
       end
       let(:new_directory) do
         [
-          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil, 'foo'],
-          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil]
+          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil, nil, 'foo'],
+          ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil, nil]
         ]
       end
 
       it 'returns :noops ops' do # reordered to show order follows csv
         expect(subject).to eq([
-          [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil, 'foo'],
-          [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil]
+          [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil, nil, 'foo'],
+          [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil, nil]
         ])
       end
     end
@@ -202,6 +202,29 @@ shared_examples "a directory transformer" do |processor|
             [:update, 'Kamalcito Mahyuddin', 'kamal@envoy.com', '555-555-5555', nil],
             [:noop, 'Adolfo Builes', 'adolfo@envoy.com', '415-232-4232', nil],
             [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
+          ])
+        end
+      end
+
+      context "in the department field" do
+        let(:current_directory) do
+          [
+            ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil, "Engineering"],
+            ['Adolfo Builes', 'adolfo@envoy.com', '415-232-4232', nil, "Engineering"],
+          ]
+        end
+
+        let(:new_directory) do
+          [
+            ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil, "Marketing"],
+            ['Adolfo Builes', 'adolfo@envoy.com', '415-232-4232', nil, "Engineering"],
+          ]
+        end
+
+        it 'returns :update op' do
+          expect(subject).to eq([
+            [:update, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil, "Marketing"],
+            [:noop, 'Adolfo Builes', 'adolfo@envoy.com', '415-232-4232', nil, "Engineering"],
           ])
         end
       end
@@ -370,7 +393,7 @@ shared_examples "a directory transformer" do |processor|
             let(:new_directory) do
               [
                 ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com']
-              ] 
+              ]
             end
 
             it 'returns a :noop op for the employee, and nils out the assistant' do
@@ -384,7 +407,7 @@ shared_examples "a directory transformer" do |processor|
             let(:new_directory) do
               [
                 ['Kamal Changed', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com']
-              ] 
+              ]
             end
 
             it 'returns an :update op, nils out the assistant, when some other attr changed' do
@@ -400,7 +423,7 @@ shared_examples "a directory transformer" do |processor|
             [
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
               ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
-            ] 
+            ]
           end
 
           it 'returns an :insert op for the assistant before the employee' do
@@ -426,7 +449,7 @@ shared_examples "a directory transformer" do |processor|
               [
                 ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil],
                 ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
-              ] 
+              ]
             end
 
             it 'returns :noop, because assistant column only sets, doesnt delete' do
@@ -460,7 +483,7 @@ shared_examples "a directory transformer" do |processor|
                 ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'matthew@envoy.com'],
                 ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
                 ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
-              ] 
+              ]
             end
 
             it 'returns :update for kamal, :noop for assistant, :insert for new assistant' do
@@ -477,7 +500,7 @@ shared_examples "a directory transformer" do |processor|
               [
                 ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'matthew@envoy.com'],
                 ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
-              ] 
+              ]
             end
 
             it 'returns :update for kamal, :delete for old assistant, :insert for new assistant' do
@@ -495,7 +518,7 @@ shared_examples "a directory transformer" do |processor|
             [
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'kamal@envoy.com'],
               ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
-            ] 
+            ]
           end
 
           it 'returns noop for kamal, assistant' do
@@ -511,7 +534,7 @@ shared_examples "a directory transformer" do |processor|
             [
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
               ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
-            ] 
+            ]
           end
 
           it 'returns noop for kamal, assistant' do
@@ -547,7 +570,7 @@ shared_examples "a directory transformer" do |processor|
             [
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com,tristan@envoy.com'],
               ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil]
-            ] 
+            ]
           end
 
           it 'returns an :insert op for employee and assistants, and sets the assistant that does exist' do
@@ -564,7 +587,7 @@ shared_examples "a directory transformer" do |processor|
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com,matthew@envoy.com'],
               ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', 'matthew@envoy.com'],
               ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', 'kamal@envoy.com']
-            ] 
+            ]
           end
 
           it 'returns an :insert op for kamal, adolfo, and matthew' do
@@ -582,7 +605,7 @@ shared_examples "a directory transformer" do |processor|
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com,matthew@envoy.com'],
               ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
               ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
-            ] 
+            ]
           end
 
           it 'returns an :insert op for the assistants before the employee' do
@@ -600,7 +623,7 @@ shared_examples "a directory transformer" do |processor|
               ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
               ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil],
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com,matthew@envoy.com']
-            ] 
+            ]
           end
 
           it 'returns an :insert op for the assistants before the employee' do
@@ -616,7 +639,7 @@ shared_examples "a directory transformer" do |processor|
           let(:new_directory) do
             [
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'kamal@envoy.com,kamal@envoy.com']
-            ] 
+            ]
           end
 
           it 'does not return multiple :insert op for the same employee, and nils out the assistants' do
@@ -752,7 +775,7 @@ shared_examples "a directory transformer" do |processor|
                 ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
                 ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil],
                 ['Tristan Dunn', 'tristan@envoy.com', '415-441-3235', nil]
-              ] 
+              ]
             end
 
             it 'returns :update for kamal, :noop for assistants, :insert for new assistant' do
@@ -771,7 +794,7 @@ shared_examples "a directory transformer" do |processor|
                 ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'tristan@envoy.com,dog@envoy.com'],
                 ['Tristan Dunn', 'tristan@envoy.com', '415-441-3235', nil],
                 ['Dog Milo', 'dog@envoy.com', '415-441-3239', nil]
-              ] 
+              ]
             end
 
             it 'returns :update for kamal, :delete for old assistants, :insert for new assistants' do
@@ -810,7 +833,7 @@ shared_examples "a directory transformer" do |processor|
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com,matthew@envoy.com'],
               ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
               ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
-            ] 
+            ]
           end
 
           it 'returns noop for kamal, assistants' do
@@ -828,7 +851,7 @@ shared_examples "a directory transformer" do |processor|
               ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
               ['Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
               ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil]
-            ] 
+            ]
           end
 
           it 'returns update for kamal, noop for assistants' do

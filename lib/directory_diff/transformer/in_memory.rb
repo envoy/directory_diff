@@ -1,6 +1,6 @@
 module DirectoryDiff
   module Transformer
-    class InMemory 
+    class InMemory
       attr_reader :current_directory, :new_directory
       attr_reader :transforms, :transforms_index
       attr_reader :options
@@ -59,7 +59,7 @@ module DirectoryDiff
           # the new record appears to be the same as the current record
           if assistant_emails.empty?
             original_assistant_value = nil
-            new_employee[3] = old_employee&.fetch(3) 
+            new_employee[3] = old_employee&.fetch(3)
           else
             original_assistant_value = new_employee[3]
           end
@@ -77,7 +77,7 @@ module DirectoryDiff
 
           if old_employee.nil?
             add_transform(:insert, new_employee)
-          elsif new_employee[0, 4] == old_employee[0, 4]
+          elsif new_employee[0, 5] == old_employee[0, 5]
             # restore assistant value after cleanup like missing assistants and own email
             new_employee[3] = original_assistant_value
             # restore phone number value
