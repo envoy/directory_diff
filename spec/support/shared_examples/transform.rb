@@ -55,19 +55,22 @@ shared_examples "a directory transformer" do |processor|
       let(:current_directory) do
         [
           ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil, nil],
-          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil, nil]
+          ['Evin Colignon', 'evin@envoy.com', '415-935-3143', nil, "Engineering",
+           "Seattle", "johnny@example.com", "onsite", "Software Engineer"]
         ]
       end
       let(:new_directory) do
         [
-          ['Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil, nil, 'foo'],
+          ['Evin Colignon', 'evin@envoy.com', '415-935-3143', nil, "Engineering",
+           "Seattle", "johnny@example.com", "onsite", "Software Engineer", "foo"],
           ['Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil, nil]
         ]
       end
 
       it 'returns :noops ops' do # reordered to show order follows csv
         expect(subject).to eq([
-          [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil, nil, 'foo'],
+          [:noop, 'Evin Colignon', 'evin@envoy.com', '415-935-3143', nil, "Engineering",
+           "Seattle", "johnny@example.com", "onsite", "Software Engineer", "foo"],
           [:noop, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', nil, nil]
         ])
       end
@@ -859,6 +862,78 @@ shared_examples "a directory transformer" do |processor|
               [:noop, 'Adolfo Builes', 'adolfo@envoy.com', '415-935-3143', nil],
               [:update, 'Kamal Mahyuddin', 'kamal@envoy.com', '415-935-3143', 'adolfo@envoy.com'],
               [:noop, 'Matthew Johnston', 'matthew@envoy.com', '415-441-3232', nil],
+            ])
+          end
+        end
+      end
+    end
+
+    # the ordering of all basic and extended attributes are as follows:
+    # [
+    #   1: name,
+    #   2: email,
+    #   3: phone_number,
+    #   4: assistant_emails,
+    #   5: department,
+    #   6: primary_location,
+    #   7: manager_email,
+    #   8: onsite_remote,
+    #   9: title
+    # ]
+    context "the new version has extended attributes" do
+      let(:new_directory) do
+        [
+          ['Evin Colignon', 'evin@envoy.com', '415-935-3143', nil, "Engineering", "HQ",
+           "john@example.com", "onsite", "Software Engineer"]
+        ]
+      end
+
+      context 'and current directory has no extended attrs' do
+        let(:current_directory) do
+          [
+            ['Evin Colignon', 'evin@envoy.com', '415-935-3143', nil, "Engineering"]
+          ]
+        end
+
+        it "returns update ops" do
+          expect(subject).to eq([
+            [:update, 'Evin Colignon', 'evin@envoy.com', '415-935-3143', nil, "Engineering", "HQ",
+             "john@example.com", "onsite", "Software Engineer"]
+          ])
+        end
+      end
+
+      context 'and current directory contains employees with extended attributes' do
+        context "and the new directory updates the extended attributes" do
+          let(:current_directory) do
+            [
+              ['Evin Colignon', 'evin@envoy.com', '415-935-3143', nil, "Engineering", "HQ",
+               "john@example.com", "onsite", "Software Engineer"],
+              ['John Doe', 'john@example.com', '415-935-3144', nil, "Engineering", "HQ",
+               nil, "onsite", "Software Engineering Manager"],
+              ['Jeff Doe', 'jeff@example.com', '415-935-3145', nil, "Engineering", "HQ",
+               nil, "onsite", "Software Engineer"],
+            ]
+          end
+          let(:new_directory) do
+            [
+              ['Evin Colignon', 'evin@envoy.com', '415-935-3143', nil, "Engineering", "Seattle",
+               "john@example.com", "remote", "Software Engineer"],
+              ['John Doe', 'john@example.com', '415-935-3144', nil, "Engineering", "HQ",
+               nil, "remote", "Software Engineering Manager"],
+              ['Jeff Doe', 'jeff@example.com', '415-935-3145', nil, "Engineering", "HQ",
+               nil, "onsite", "Software Engineer"],
+            ]
+          end
+
+          it "returns update ops" do
+            expect(subject).to eq([
+              [:update, 'Evin Colignon', 'evin@envoy.com', '415-935-3143', nil, "Engineering", "Seattle",
+               "john@example.com", "remote", "Software Engineer"],
+              [:update, 'John Doe', 'john@example.com', '415-935-3144', nil, "Engineering", "HQ",
+               nil, "remote", "Software Engineering Manager"],
+              [:noop, 'Jeff Doe', 'jeff@example.com', '415-935-3145', nil, "Engineering", "HQ",
+               nil, "onsite", "Software Engineer"],
             ])
           end
         end
