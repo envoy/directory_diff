@@ -77,7 +77,7 @@ module DirectoryDiff
 
           if old_employee.nil?
             add_transform(:insert, new_employee)
-          elsif new_employee[0, 5] == old_employee[0, 5]
+          elsif new_employee[0, 9] == old_employee[0, 9]
             # restore assistant value after cleanup like missing assistants and own email
             new_employee[3] = original_assistant_value
             # restore phone number value
