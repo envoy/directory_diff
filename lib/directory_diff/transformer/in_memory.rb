@@ -1,3 +1,5 @@
+require 'active_support/core_ext/object/blank'
+
 module DirectoryDiff
   module Transformer
     class InMemory
